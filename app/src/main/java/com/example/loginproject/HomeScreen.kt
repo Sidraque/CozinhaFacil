@@ -81,7 +81,7 @@ fun HomeScreen(navController: NavController) {
                     Spacer(modifier = Modifier.weight(1f))
                     FloatingActionButton(
                         onClick = { /* Navegar para adicionar nova receita */ },
-                        containerColor = Color(0xFFFFF59D), // Amarelo mais vibrante para destacar o botão de adicionar
+                        containerColor = Color(0xFFFFF59D), // Amarelo mais claro para destacar o botão de adicionar
                         contentColor = Color.Black,
                         modifier = Modifier.size(48.dp)
                     ) {
