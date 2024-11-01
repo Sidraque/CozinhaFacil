@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "720296799887",
+    "project_id": "cozinhafacil-21ef5",
+    "storage_bucket": "cozinhafacil-21ef5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:720296799887:android:7792c6ee82a6474697cafa",
+        "android_client_info": {
+          "package_name": "com.company.cozinhafacil"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuFACyAHqadd_k-svkBxNrA6hSqVqaq1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
