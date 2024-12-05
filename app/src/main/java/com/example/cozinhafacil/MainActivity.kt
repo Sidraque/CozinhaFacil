@@ -1,5 +1,6 @@
 package com.example.cozinhafacil
 
+import PerfilScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,7 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun LoginApp() {
     val navController = rememberNavController()
@@ -38,6 +39,9 @@ fun LoginApp() {
         composable("cadastro") { CadastroScreen(navController) }
         composable("home") { HomeScreen(navController) }
         composable("editar") { EditScreen(navController) }
+        composable("perfil") { PerfilScreen(navController) }
+        composable("editarPerfil") { EditarPerfilScreen(navController) }
+
     }
 }
 

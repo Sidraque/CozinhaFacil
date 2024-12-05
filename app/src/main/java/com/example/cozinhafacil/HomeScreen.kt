@@ -65,8 +65,8 @@ fun HomeScreen(navController: NavController) {
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFFFD600)), // Tom mais escuro de amarelo para destaque
                 actions = {
-                    IconButton(onClick = { /* Navegar para o perfil do usuário */ }) {
-                        Icon(Icons.Default.Person, contentDescription = "Perfil", tint = Color.Black)
+                    IconButton(onClick = { navController.navigate("perfil") }) {
+                        Icon(Icons.Default.Person, contentDescription = "Perfil")
                     }
                 }
             )
