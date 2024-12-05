@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.cozinhafacil"
-        minSdk = 21
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -77,4 +77,10 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+
+    implementation("com.google.firebase:firebase-database")
+    implementation("com.google.dagger:hilt-android:2.44")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+
 }

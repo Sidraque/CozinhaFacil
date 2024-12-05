@@ -17,6 +17,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.database.*
 
 @Composable
 fun EditarPerfilScreen(navController: NavController) {
@@ -24,6 +27,28 @@ fun EditarPerfilScreen(navController: NavController) {
     var primeiroNome by remember { mutableStateOf("") }
     var segundoNome by remember { mutableStateOf("") }
     var senhaAtualizada by remember { mutableStateOf("") }
+    var senhaAtual by remember { mutableStateOf("") }
+    var mensagem by remember { mutableStateOf("") }
+
+    // Carregar dados do Firebase ao abrir a tela
+    LaunchedEffect(Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            val databaseReference = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
+            databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    primeiroNome = snapshot.child("nome").getValue(String::class.java) ?: ""
+                    segundoNome = snapshot.child("sobrenome").getValue(String::class.java) ?: ""
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    mensagem = "Erro ao carregar dados: ${error.message}"
+                }
+            })
+        } else {
+            mensagem = "Usuário não logado."
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -42,7 +67,12 @@ fun EditarPerfilScreen(navController: NavController) {
                     .background(Color(0xFFFFF9C4), shape = CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Edit, contentDescription = "Editar Avatar", tint = Color.Black, modifier = Modifier.size(40.dp))
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = "Editar Avatar",
+                    tint = Color.Black,
+                    modifier = Modifier.size(40.dp)
+                )
             }
         }
 
@@ -61,7 +91,7 @@ fun EditarPerfilScreen(navController: NavController) {
         OutlinedTextField(
             value = primeiroNome,
             onValueChange = { primeiroNome = it },
-            label = { Text("Primeiro nome") },
+            label = { Text("Primeiro Nome") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -70,7 +100,18 @@ fun EditarPerfilScreen(navController: NavController) {
         OutlinedTextField(
             value = segundoNome,
             onValueChange = { segundoNome = it },
-            label = { Text("Segundo nome") },
+            label = { Text("Sobrenome") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Campo de senha atual
+        OutlinedTextField(
+            value = senhaAtual,
+            onValueChange = { senhaAtual = it },
+            label = { Text("Senha Atual") },
+            visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -79,23 +120,61 @@ fun EditarPerfilScreen(navController: NavController) {
         OutlinedTextField(
             value = senhaAtualizada,
             onValueChange = { senhaAtualizada = it },
-            label = { Text("Senha") },
+            label = { Text("Nova Senha") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Botão Salvar
         Button(
             onClick = {
-                // Lógica para salvar os dados editados
-                navController.navigateUp()
+                val user = FirebaseAuth.getInstance().currentUser
+                if (user != null) {
+                    // Atualiza nome e sobrenome no Firebase sem necessidade de reautenticação
+                    if (primeiroNome.isNotEmpty() || segundoNome.isNotEmpty()) {
+                        val databaseReference =
+                            FirebaseDatabase.getInstance().getReference("users/${user.uid}")
+                        val updates = mutableMapOf<String, Any>()
+                        if (primeiroNome.isNotEmpty()) updates["nome"] = primeiroNome
+                        if (segundoNome.isNotEmpty()) updates["sobrenome"] = segundoNome
+                        databaseReference.updateChildren(updates)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    mensagem = "Nome e sobrenome atualizados com sucesso!"
+                                } else {
+                                    mensagem = "Erro ao atualizar dados: ${task.exception?.message}"
+                                }
+                            }
+                    }
+
+                    // Atualiza senha no Firebase, se fornecida
+                    if (senhaAtualizada.isNotEmpty()) {
+                        val credential = EmailAuthProvider.getCredential(user.email!!, senhaAtual)
+                        user.reauthenticate(credential).addOnCompleteListener { reauthTask ->
+                            if (reauthTask.isSuccessful) {
+                                user.updatePassword(senhaAtualizada)
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            mensagem = "Senha atualizada com sucesso!"
+                                        } else {
+                                            mensagem = "Erro ao atualizar a senha: ${task.exception?.message}"
+                                        }
+                                    }
+                            } else {
+                                mensagem = "Erro ao reautenticar: ${reauthTask.exception?.message}"
+                            }
+                        }
+                    }
+                } else {
+                    mensagem = "Usuário não logado."
+                }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEB3B)),
             modifier = Modifier
-                .width(200.dp),
-            shape = RoundedCornerShape(13.dp)
+                .height(50.dp)
+                .width(400.dp),
+            shape = RoundedCornerShape(20.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -106,15 +185,16 @@ fun EditarPerfilScreen(navController: NavController) {
             }
         }
 
-        Spacer(modifier = Modifier.height(1.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Botão Voltar
         Button(
             onClick = { navController.navigateUp() },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEB3B)),
             modifier = Modifier
-                .width(200.dp),
-            shape = RoundedCornerShape(13.dp)
+                .height(50.dp)
+                .width(400.dp),
+            shape = RoundedCornerShape(20.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -124,5 +204,11 @@ fun EditarPerfilScreen(navController: NavController) {
                 Text("Voltar", color = Color.Black, fontSize = 18.sp)
             }
         }
+
+        Text(
+            text = mensagem,
+            color = if (mensagem.contains("sucesso")) Color.Green else Color.Red,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
     }
 }

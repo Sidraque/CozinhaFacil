@@ -4,9 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,18 +13,47 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 @Composable
 fun PerfilScreen(navController: NavHostController) {
+    var nomeUsuario by remember { mutableStateOf("Carregando...") }
+    var emailUsuario by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        // Obter o usuário logado
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            emailUsuario = user.email ?: "Email não disponível"
+
+            // Referência ao Realtime Database
+            val databaseReference = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
+            databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    nomeUsuario = snapshot.child("nome").getValue(String::class.java) ?: "Usuário"
+                    isLoading = false
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    nomeUsuario = "Erro ao carregar"
+                    isLoading = false
+                }
+            })
+        } else {
+            nomeUsuario = "Usuário não logado"
+            isLoading = false
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -70,11 +98,12 @@ fun PerfilScreen(navController: NavHostController) {
 
         // Nome do usuário
         Text(
-            text = "Username",
+            text = if (isLoading) "Carregando..." else nomeUsuario,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black
         )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -117,7 +146,11 @@ fun PerfilScreen(navController: NavHostController) {
                 .height(56.dp)
                 .fillMaxWidth()
                 .background(Color(0xFFFFEB3B), RoundedCornerShape(16.dp))
-                .clickable { /* Ação para sair da conta */ },
+                .clickable {
+                    // Ação de logout
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") // Redireciona para a tela de login após o logout
+                },
             contentAlignment = Alignment.Center
         ) {
             Text(

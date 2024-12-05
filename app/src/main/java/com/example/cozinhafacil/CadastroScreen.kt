@@ -18,10 +18,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.cozinhafacil.repository.AuthRepository
+import com.example.cozinhafacil.viewmodel.CadastroViewModel
+import com.example.cozinhafacil.viewmodel.CadastroViewModelFactory
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CadastroScreen(navController: NavController) {
+fun CadastroScreen(
+    navController: NavController,
+    viewModel: CadastroViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+        factory = CadastroViewModelFactory(AuthRepository())
+    )
+) {
     var nomeInput by remember { mutableStateOf("") }
     var sobrenomeInput by remember { mutableStateOf("") }
     var emailInput by remember { mutableStateOf("") }
@@ -34,6 +42,10 @@ fun CadastroScreen(navController: NavController) {
     var emailError by remember { mutableStateOf(false) }
     var senhaError by remember { mutableStateOf(false) }
     var confirmarSenhaError by remember { mutableStateOf(false) }
+
+    // Carregamento e mensagem de sucesso ou erro
+    val isLoading = viewModel.isLoading
+    val cadastroResult = viewModel.cadastroResult
 
     Column(
         modifier = Modifier
@@ -184,7 +196,7 @@ fun CadastroScreen(navController: NavController) {
                 confirmarSenhaError = confirmarSenhaInput != senhaInput
             },
             label = {
-                Text("Confirmação de senha", color = if (confirmarSenhaError) Color.Red else Color.Gray)
+                Text("Confirmar Senha", color = if (confirmarSenhaError) Color.Red else Color.Gray)
             },
             isError = confirmarSenhaError,
             modifier = Modifier
@@ -194,7 +206,7 @@ fun CadastroScreen(navController: NavController) {
                 containerColor = Color.White,
                 focusedBorderColor = Color.Black,
                 unfocusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Gray // Cor cinza quando focado
+                focusedLabelColor = Color.Gray
             ),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Password,
@@ -203,7 +215,7 @@ fun CadastroScreen(navController: NavController) {
             singleLine = true
         )
         if (confirmarSenhaError) {
-            Text("Senhas não coincidem", color = Color.Red, fontSize = 12.sp)
+            Text("As senhas não coincidem", color = Color.Red, fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -211,16 +223,19 @@ fun CadastroScreen(navController: NavController) {
         // Botão de Cadastro
         Button(
             onClick = {
-                // Verificar todos os campos ao clicar no botão
-                nomeError = nomeInput.isEmpty()
-                sobrenomeError = sobrenomeInput.isEmpty()
-                emailError = emailInput.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(emailInput).matches()
-                senhaError = senhaInput.length < 6
-                confirmarSenhaError = confirmarSenhaInput != senhaInput
-
-                // Se todos os campos forem válidos, prosseguir
                 if (!nomeError && !sobrenomeError && !emailError && !senhaError && !confirmarSenhaError) {
-                    navController.navigate("login")
+                    // Iniciar o processo de cadastro
+                    viewModel.cadastrarUsuario(
+                        emailInput,
+                        senhaInput,
+                        nomeInput,
+                        sobrenomeInput,
+                        onSuccess = {
+                            navController.navigate("login")  // Substitua com o nome da sua tela de login
+                        },
+                        onFailure = { errorMessage ->
+                        }
+                    )
                 }
             },
             modifier = Modifier
@@ -232,6 +247,17 @@ fun CadastroScreen(navController: NavController) {
             Text("Cadastre-se", fontSize = 18.sp, color = Color.Black)
         }
 
+        // Carregamento (loading)
+        if (isLoading) {
+            Spacer(modifier = Modifier.height(24.dp))
+            CircularProgressIndicator(color = Color.Blue)
+        }
+
+        // Mensagem de sucesso ou erro
+        cadastroResult?.let {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(it, color = if (it.contains("sucesso")) Color.Green else Color.Red, fontSize = 16.sp)
+        }
         Spacer(modifier = Modifier.height(16.dp))
 
         // Link para a tela de login
