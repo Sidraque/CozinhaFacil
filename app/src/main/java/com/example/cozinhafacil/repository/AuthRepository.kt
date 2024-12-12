@@ -1,5 +1,6 @@
 package com.example.cozinhafacil.repository
 
+import com.example.cozinhafacil.models.Receita
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
@@ -11,6 +12,30 @@ class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val database = FirebaseDatabase.getInstance().reference
     private val firebaseAuth = FirebaseAuth.getInstance()
+
+
+    // Função para salvar uma receita no Firebase Realtime Database
+    suspend fun salvarReceita(receita: Map<String, Any?>): Result<Unit> {
+        return try {
+            val databaseRef = FirebaseDatabase.getInstance().getReference("receitas")
+            databaseRef.push().setValue(receita).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    // Função para buscar todas as receitas
+    suspend fun buscarReceitas(): Result<List<Receita>> {
+        return try {
+            val snapshot = database.child("receitas").get().await()
+            val receitas = snapshot.children.mapNotNull { it.getValue(Receita::class.java) }
+            Result.success(receitas)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     suspend fun registerUser(
         email: String,

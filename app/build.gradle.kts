@@ -82,5 +82,7 @@ dependencies {
     implementation("com.google.firebase:firebase-database")
     implementation("com.google.dagger:hilt-android:2.44")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+    implementation("androidx.compose.material:material-icons-extended:1.4.3")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
 }

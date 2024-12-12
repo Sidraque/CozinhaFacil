@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
@@ -132,9 +133,8 @@ fun PerfilScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.Start,
             modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            MenuItem(icon = Icons.Filled.List, label = "Minhas Receitas")
-            MenuItem(icon = Icons.Filled.Star, label = "Favoritos")
-            MenuItem(icon = Icons.Filled.Lock, label = "Alterar Senha")
+            MenuItem(icon = Icons.Filled.List, label = "Minhas Receitas", onClick = { navController.navigate("minhasReceitas") })
+            MenuItem(icon = Icons.Filled.Star, label = "Favoritos", onClick = { navController.navigate("favoritos") })
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -164,12 +164,12 @@ fun PerfilScreen(navController: NavHostController) {
 }
 
 @Composable
-fun MenuItem(icon: ImageVector, label: String) {
+fun MenuItem(icon: ImageVector, label: String, onClick: () -> Unit)  {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
-            .clickable { /* Ação do menu */ },
+            .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

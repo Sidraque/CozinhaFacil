@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.cozinhafacil.repository.AuthRepository
+import kotlinx.coroutines.launch
 
 data class Receita(
     val titulo: String,
@@ -35,14 +37,20 @@ data class Receita(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
-    var searchQuery by remember { mutableStateOf("") }
-    val receitas = remember {
-        mutableStateListOf(
-            Receita("Receita 1", "Supporting line text lorem ipsum dolor sit amet, consectetur.", "Username"),
-            Receita("Receita 2", "Supporting line text lorem ipsum dolor sit amet, consectetur.", "Username"),
-            Receita("Receita 3", "Supporting line text lorem ipsum dolor sit amet, consectetur.", "Username")
-        )
+fun HomeScreen(navController: NavController, authRepository: AuthRepository) {
+    val coroutineScope = rememberCoroutineScope()
+    var receitas by remember { mutableStateOf<List<Receita>>(emptyList()) }
+    var mensagemErro by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            val result = authRepository.buscarReceitas()
+            if (result.isSuccess) {
+                receitas = result.getOrDefault(emptyList()) as List<Receita>
+            } else {
+                mensagemErro = result.exceptionOrNull()?.message
+            }
+        }
     }
 
     Scaffold(
@@ -73,15 +81,15 @@ fun HomeScreen(navController: NavController) {
         },
         bottomBar = {
             BottomAppBar(
-                containerColor = Color(0xFFFFD600), // Tom mais claro de amarelo para a barra inferior
+                containerColor = Color(0xFFFFD600),
                 content = {
                     IconButton(onClick = { /* Navegar para pesquisa */ }) {
                         Icon(Icons.Default.Search, contentDescription = "Pesquisar", tint = Color.Black)
                     }
                     Spacer(modifier = Modifier.weight(1f))
                     FloatingActionButton(
-                        onClick = { /* Navegar para adicionar nova receita */ },
-                        containerColor = Color(0xFFFFF59D), // Amarelo mais claro para destacar o botão de adicionar
+                        onClick = { navController.navigate("criarReceita") },
+                        containerColor = Color(0xFFFFF59D),
                         contentColor = Color.Black,
                         modifier = Modifier.size(48.dp)
                     ) {
@@ -95,13 +103,11 @@ fun HomeScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
         ) {
-            // Lista de Receitas
+            mensagemErro?.let { Text(it, color = Color.Red) }
+
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 16.dp),
-                modifier = Modifier.fillMaxWidth()
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(receitas) { receita ->
                     ReceitaItem(receita)
@@ -172,5 +178,6 @@ fun ReceitaItem(receita: Receita) {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen(rememberNavController())
+    val authRepository = AuthRepository() // Criação do AuthRepository para o Preview
+    HomeScreen(navController = rememberNavController(), authRepository = authRepository)
 }
