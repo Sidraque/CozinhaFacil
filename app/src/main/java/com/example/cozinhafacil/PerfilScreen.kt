@@ -31,12 +31,10 @@ fun PerfilScreen(navController: NavHostController) {
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        // Obter o usuário logado
         val user = FirebaseAuth.getInstance().currentUser
         if (user != null) {
             emailUsuario = user.email ?: "Email não disponível"
 
-            // Referência ao Realtime Database
             val databaseReference = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
             databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -80,7 +78,6 @@ fun PerfilScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Ícone do perfil
         Box(
             modifier = Modifier
                 .size(140.dp)
@@ -97,7 +94,6 @@ fun PerfilScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Nome do usuário
         Text(
             text = if (isLoading) "Carregando..." else nomeUsuario,
             fontSize = 20.sp,
@@ -128,7 +124,6 @@ fun PerfilScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Opções de menu
         Column(
             horizontalAlignment = Alignment.Start,
             modifier = Modifier.padding(horizontal = 32.dp)
@@ -139,7 +134,6 @@ fun PerfilScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Botão Sair da Conta
         Box(
             modifier = Modifier
                 .padding(32.dp)
@@ -147,7 +141,6 @@ fun PerfilScreen(navController: NavHostController) {
                 .fillMaxWidth()
                 .background(Color(0xFFFFEB3B), RoundedCornerShape(16.dp))
                 .clickable {
-                    // Ação de logout
                     FirebaseAuth.getInstance().signOut()
                     navController.navigate("login") // Redireciona para a tela de login após o logout
                 },

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.cozinhafacil.models.User
 import com.example.cozinhafacil.repository.AuthRepository
 import com.example.cozinhafacil.viewmodel.CadastroViewModel
 import com.example.cozinhafacil.viewmodel.CadastroViewModelFactory
@@ -36,16 +37,14 @@ fun CadastroScreen(
     var senhaInput by remember { mutableStateOf("") }
     var confirmarSenhaInput by remember { mutableStateOf("") }
 
-    // Estados para erros de validação
     var nomeError by remember { mutableStateOf(false) }
     var sobrenomeError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
     var senhaError by remember { mutableStateOf(false) }
     var confirmarSenhaError by remember { mutableStateOf(false) }
 
-    // Carregamento e mensagem de sucesso ou erro
     val isLoading = viewModel.isLoading
-    val cadastroResult = viewModel.cadastroResult
+    var cadastroResult = viewModel.cadastroResult
 
     Column(
         modifier = Modifier
@@ -54,7 +53,6 @@ fun CadastroScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Título da tela
         Text(
             "Cadastro",
             style = MaterialTheme.typography.headlineMedium.copy(
@@ -65,7 +63,6 @@ fun CadastroScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Campo Nome
         OutlinedTextField(
             value = nomeInput,
             onValueChange = {
@@ -82,7 +79,7 @@ fun CadastroScreen(
                 containerColor = Color.White,
                 focusedBorderColor = Color.Black,
                 unfocusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Gray // Cor cinza quando focado
+                focusedLabelColor = Color.Gray
             ),
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next
@@ -95,7 +92,6 @@ fun CadastroScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Campo Sobrenome
         OutlinedTextField(
             value = sobrenomeInput,
             onValueChange = {
@@ -112,7 +108,7 @@ fun CadastroScreen(
                 containerColor = Color.White,
                 focusedBorderColor = Color.Black,
                 unfocusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Gray // Cor cinza quando focado
+                focusedLabelColor = Color.Gray
             ),
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next
@@ -125,7 +121,6 @@ fun CadastroScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Campo Email
         OutlinedTextField(
             value = emailInput,
             onValueChange = {
@@ -142,7 +137,7 @@ fun CadastroScreen(
                 containerColor = Color.White,
                 focusedBorderColor = Color.Black,
                 unfocusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Gray // Cor cinza quando focado
+                focusedLabelColor = Color.Gray
             ),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Email,
@@ -156,7 +151,6 @@ fun CadastroScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Campo Senha
         OutlinedTextField(
             value = senhaInput,
             onValueChange = {
@@ -174,7 +168,7 @@ fun CadastroScreen(
                 containerColor = Color.White,
                 focusedBorderColor = Color.Black,
                 unfocusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Gray // Cor cinza quando focado
+                focusedLabelColor = Color.Gray
             ),
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Password,
@@ -188,7 +182,6 @@ fun CadastroScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Campo Confirmar Senha
         OutlinedTextField(
             value = confirmarSenhaInput,
             onValueChange = {
@@ -220,20 +213,22 @@ fun CadastroScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Botão de Cadastro
         Button(
             onClick = {
                 if (!nomeError && !sobrenomeError && !emailError && !senhaError && !confirmarSenhaError) {
-                    // Iniciar o processo de cadastro
+                    val user = User(
+                        nome = nomeInput,
+                        sobrenome = sobrenomeInput,
+                        email = emailInput
+                    )
                     viewModel.cadastrarUsuario(
-                        emailInput,
-                        senhaInput,
-                        nomeInput,
-                        sobrenomeInput,
+                        user = user,
+                        password = senhaInput,
                         onSuccess = {
-                            navController.navigate("login")  // Substitua com o nome da sua tela de login
+                            navController.navigate("login")
                         },
                         onFailure = { errorMessage ->
+                            cadastroResult = errorMessage
                         }
                     )
                 }
@@ -247,20 +242,18 @@ fun CadastroScreen(
             Text("Cadastre-se", fontSize = 18.sp, color = Color.Black)
         }
 
-        // Carregamento (loading)
+
         if (isLoading) {
             Spacer(modifier = Modifier.height(24.dp))
             CircularProgressIndicator(color = Color.Blue)
         }
 
-        // Mensagem de sucesso ou erro
         cadastroResult?.let {
             Spacer(modifier = Modifier.height(24.dp))
             Text(it, color = if (it.contains("sucesso")) Color.Green else Color.Red, fontSize = 16.sp)
         }
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Link para a tela de login
         TextButton(onClick = { navController.navigate("login") }) {
             Text("Login", color = Color.Gray)
         }

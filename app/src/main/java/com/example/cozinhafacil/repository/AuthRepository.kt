@@ -1,32 +1,66 @@
 package com.example.cozinhafacil.repository
 
+import com.example.cozinhafacil.models.User
 import com.example.cozinhafacil.models.Receita
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.tasks.await
 
-data class AuthResponse(val isSuccessful: Boolean, val message: String?)
-
-
 class AuthRepository {
     private val auth = FirebaseAuth.getInstance()
     private val database = FirebaseDatabase.getInstance().reference
-    private val firebaseAuth = FirebaseAuth.getInstance()
 
-
-    // Função para salvar uma receita no Firebase Realtime Database
-    suspend fun salvarReceita(receita: Map<String, Any?>): Result<Unit> {
+    suspend fun registerUser(user: User, password: String): Result<Unit> {
         return try {
-            val databaseRef = FirebaseDatabase.getInstance().getReference("receitas")
-            databaseRef.push().setValue(receita).await()
+            val userCredential = auth.createUserWithEmailAndPassword(user.email, password).await()
+
+            val userId = userCredential.user?.uid ?: throw Exception("ID do usuário não encontrado")
+            database.child("users").child(userId).setValue(user).await()
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
+    suspend fun login(email: String, password: String): Result<User> {
+        return try {
+            auth.signInWithEmailAndPassword(email, password).await()
 
-    // Função para buscar todas as receitas
+            val userId = auth.currentUser?.uid ?: throw Exception("ID do usuário não encontrado")
+
+            val snapshot = database.child("users").child(userId).get().await()
+            val user = snapshot.getValue(User::class.java)
+                ?: throw Exception("Dados do usuário não encontrados")
+
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun isUserLoggedIn(): Boolean {
+        return auth.currentUser != null
+    }
+
+    fun getCurrentUser(): User? {
+        val firebaseUser = auth.currentUser ?: return null
+        return User(
+            nome = firebaseUser.displayName ?: "",
+            sobrenome = "",
+            email = firebaseUser.email ?: ""
+        )
+    }
+
+    suspend fun salvarReceita(receita: Map<String, Any?>): Result<Unit> {
+        return try {
+            database.child("receitas").push().setValue(receita).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun buscarReceitas(): Result<List<Receita>> {
         return try {
             val snapshot = database.child("receitas").get().await()
@@ -36,48 +70,4 @@ class AuthRepository {
             Result.failure(e)
         }
     }
-
-    suspend fun registerUser(
-        email: String,
-        password: String,
-        nome: String,
-        sobrenome: String
-    ): Result<Unit> {
-        return try {
-            // Criação do usuário no Firebase Authentication
-            val userCredential = auth.createUserWithEmailAndPassword(email, password).await()
-
-            // Adiciona os dados ao Realtime Database
-            val userId = userCredential.user?.uid ?: throw Exception("ID do usuário não encontrado")
-            val userData = mapOf(
-                "nome" to nome,
-                "sobrenome" to sobrenome,
-                "email" to email
-            )
-            database.child("users").child(userId).setValue(userData).await()
-
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-
-    // Função para fazer login no Firebase
-    suspend fun login(email: String, senha: String): AuthResponse {
-        return try {
-            val authResult = firebaseAuth.signInWithEmailAndPassword(email, senha).await()
-            AuthResponse(isSuccessful = true, message = null)
-        } catch (e: Exception) {
-            AuthResponse(isSuccessful = false, message = e.message)
-        }
-    }
-
-    // Função para verificar se o usuário está autenticado
-    fun isUserLoggedIn(): Boolean {
-        return firebaseAuth.currentUser != null
-    }
-
-    // Função para obter o usuário atual
-    fun getCurrentUser() = firebaseAuth.currentUser
 }

@@ -13,7 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.cozinhafacil.repository.AuthRepository
-import com.example.cozinhafacil.screens.* // Importa todas as telas do pacote de forma limpa
+import com.example.cozinhafacil.screens.*
 import com.google.firebase.auth.FirebaseAuth
 
 // Variáveis globais para armazenar dados do usuário

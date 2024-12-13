@@ -22,6 +22,7 @@ import com.example.cozinhafacil.viewmodel.LoginViewModel
 import com.example.cozinhafacil.viewmodel.LoginViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cozinhafacil.repository.AuthRepository
+import com.example.cozinhafacil.viewmodel.LoginResult
 
 @Composable
 fun LoginScreen(navController: NavController) {
@@ -30,8 +31,10 @@ fun LoginScreen(navController: NavController) {
     var emailInput by remember { mutableStateOf("") }
     var senhaInput by remember { mutableStateOf("") }
 
-    val isLoading by remember { mutableStateOf(loginViewModel.isLoading) }
-    val errorMessage = loginViewModel.retrieveErrorMessage()
+    val isLoading by remember { derivedStateOf { loginViewModel.isLoading } }
+    val loginResult by remember { derivedStateOf { loginViewModel.loginResult } }
+
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -40,7 +43,6 @@ fun LoginScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Texto "Seja bem-vindo!"
         Text(
             text = "Seja bem-vindo!",
             fontSize = 32.sp,
@@ -51,7 +53,6 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Texto "Efetue seu login"
         Text(
             text = "Efetue seu login",
             fontSize = 18.sp,
@@ -62,7 +63,6 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Campo de email ou usuário
         OutlinedTextField(
             value = emailInput,
             onValueChange = { emailInput = it },
@@ -72,7 +72,6 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo de senha
         OutlinedTextField(
             value = senhaInput,
             onValueChange = { senhaInput = it },
@@ -83,36 +82,45 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Botão "Acessar"
         Button(
             onClick = {
-                loginViewModel.login(emailInput, senhaInput, onSuccess = {
-                    navController.navigate("home")
-                })
+                loginViewModel.login(
+                    email = emailInput,
+                    password = senhaInput,
+                    onSuccess = { user ->
+                        navController.navigate("home")
+                    },
+                    onFailure = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+                    }
+                )
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEB3B)),
             modifier = Modifier
                 .width(400.dp)
-                .height(50.dp)
+                .height(50.dp),
+            enabled = !isLoading
         ) {
-            Text("Acessar", color = Color.Black, fontSize = 18.sp)
+            if (isLoading) {
+                CircularProgressIndicator(color = Color.Black, modifier = Modifier.size(24.dp))
+            } else {
+                Text("Acessar", color = Color.Black, fontSize = 18.sp)
+            }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Exibe a mensagem de erro, se houver
-        if (errorMessage.isNotEmpty()) {
+        if (loginResult is LoginResult.Failure) {
             Text(
-                text = errorMessage,
+                text = (loginResult as LoginResult.Failure).message,
                 color = Color.Red,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
         }
 
-        Spacer(modifier = Modifier.height(0.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Botão "Cadastre-se"
         Button(
             onClick = { navController.navigate("cadastro") },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEB3B)),
@@ -125,7 +133,6 @@ fun LoginScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Link "Esqueceu sua senha?"
         val annotatedLinkString = buildAnnotatedString {
             append("Esqueceu sua senha? ")
             pushStyle(SpanStyle(color = Color.Blue, fontWeight = FontWeight.Bold))
@@ -135,7 +142,7 @@ fun LoginScreen(navController: NavController) {
 
         ClickableText(
             text = annotatedLinkString,
-            onClick = { /* Implementação do clique */ },
+            onClick = {},
             modifier = Modifier.align(Alignment.CenterHorizontally),
             style = TextStyle(fontSize = 16.sp)
         )

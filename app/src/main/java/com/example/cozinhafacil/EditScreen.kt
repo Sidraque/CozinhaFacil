@@ -28,7 +28,6 @@ fun EditScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campo Nome
         TextField(
             value = nomeInput,
             onValueChange = { nomeInput = it },
@@ -38,7 +37,6 @@ fun EditScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Campo Email
         TextField(
             value = emailInput,
             onValueChange = { emailInput = it },
@@ -48,7 +46,6 @@ fun EditScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Campo Telefone
         TextField(
                     value = telefoneInput,
             onValueChange = { telefoneInput = it },
@@ -58,7 +55,6 @@ fun EditScreen(navController: NavController) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Campo Hobby
         TextField(
             value = hobbyInput,
             onValueChange = { hobbyInput = it },
@@ -69,13 +65,11 @@ fun EditScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            // Atualiza os valores globais com os novos dados inseridos pelo usuário
             nome = nomeInput
             email = emailInput
             telefone = telefoneInput
             hobby = hobbyInput
 
-            // Retorna para a tela Home
             navController.navigate("home")
         }) {
             Text("Salvar")

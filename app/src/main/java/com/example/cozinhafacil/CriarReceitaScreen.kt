@@ -105,7 +105,7 @@ fun CriarReceitaScreen(navController: NavController, authRepository: AuthReposit
                             val receita = Receita(
                                 titulo = titulo,
                                 descricao = descricao,
-                                autor = authRepository.getCurrentUser()?.displayName ?: "Desconhecido",
+                                autor = authRepository.getCurrentUser()?.nome ?: "Desconhecido",
                                 ingredientes = ingredientes,
                                 imagemUri = selectedImageUri?.toString()
                             )
